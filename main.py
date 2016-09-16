@@ -9,7 +9,7 @@ import cv2 as cv2
 
 pygame.init()
 # Set the width and height of the screen [width,height]
-size = [250, 250]
+size = [500, 500]
 screen = pygame.display.set_mode(size)
 
 pygame.display.set_caption("My Game")
@@ -28,6 +28,8 @@ rover = RoverExtended()
 controllerType = raw_input('Enter K to control from Keyboard, or W to control from Wheel (K/W): ')
 if controllerType == "K":
     keyboard = Keyboard()
+    for _ in range(10):
+        print ("To move around with the rover, click the PyGame window")
 else:
     wheel = Wheel()
 # -------- Main Program Loop -----------
@@ -41,19 +43,15 @@ while not done:
                 rover.angle = keyboard.getAngle(event.key)
 
     if controllerType == "W":
-        wheel.getAngle()
-    print rover.angle
-    rover.setTreads()
+        rover.angle = wheel.getAngle()
 
+    rover.setTreads()
 
     # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
     # Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
 
 
-
-    # Limit to 20 frames per second
-    clock.tick(1000)
 
 # Close the window and quit.
 # If you forget this line, the program will 'hang'

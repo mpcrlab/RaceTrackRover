@@ -24,6 +24,8 @@ class Wheel:
         return angle
 
     # returns an array of states of the buttons 1-10
+    # 1 means being pushed, 0 means inactive, etc.
+    # [1, 0, 0, 0, 0, 0, 0, 0, 0, 0] means the Button1 is being pushed, the rest are not
     def getAllButtons(self):
         # Get count of joysticks
         joystick_count = pygame.joystick.get_count()
@@ -41,12 +43,14 @@ class Wheel:
                 buttons.append(button)
         return buttons
 
+    # takes input entire buttons array
+    # looks for "1"s and calls functions for that button
     def useButtons(self, buttons):
-        # lever pulled towards you
+        # gear shift pulled towards you
         if buttons[0] == 1:
             # for instance here you could call a Reverse() function or perform some action()
             pass
-        # lever pushed away from you
+        # gear shift pushed away from you
         elif buttons[1] == 1:
             pass
         # top left button
@@ -67,9 +71,9 @@ class Wheel:
         # bottom right button
         elif buttons[7] == 1:
             pass
-        # left lever under wheel
+        # left handel under wheel
         elif buttons[8] == 1:
             pass
-        #right lever under wheel
+        # right handel under wheel
         elif buttons[9] == 1:
             pass

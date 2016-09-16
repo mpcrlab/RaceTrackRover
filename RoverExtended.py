@@ -10,8 +10,9 @@ class RoverExtended(Rover):
         self.image = None
         self.quit = False
 
-        # angle ranges from 0 to 180, 90 means [1, 1]
-        self.angle = 90
+        # angle ranges from 0 to 180 where 180 = hard left, 90 = foward,
+        # and 0 = hard right
+        self.angle = None
 
     def run(self):
         sleep(1.5)
@@ -21,7 +22,9 @@ class RoverExtended(Rover):
         pygame.quit()
 
     def setTreads(self):
-        if self.angle > 100:
+        if self.angle == None:
+            treads = [0, 0]
+        elif self.angle > 100:
             treads = [0, 1]
         elif self.angle > 80 and self.angle < 100:
             treads = [.5, .5]

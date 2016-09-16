@@ -8,10 +8,8 @@ class Keyboard():
     def getAngle(self, key):
         if key == pygame.K_q:
             angle = 135
-            print "pressed"
         elif key == pygame.K_e:
             angle = 35
-            print "Pressed"
         else:
             angle = 90
 
