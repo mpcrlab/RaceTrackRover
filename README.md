@@ -1,5 +1,7 @@
 # RaceTrackRover
 
+Seemlessly pick between Wheel and Keyboard to control the rover
+
 ##Important/Bug
 When using the keyboard, you need to go back to the PyGame window before being able to control the rover.
 ##Keyboard Controls
