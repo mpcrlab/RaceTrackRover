@@ -18,7 +18,7 @@ class Rover:
         TARGET_ID = 'AC13'
         TARGET_PASSWORD = 'AC13'
 
-        self.TREAD_DELAY_SEC = 1.0
+        self.TREAD_DELAY_SEC = 0.05
         self.KEEPALIVE_PERIOD_SEC = 60
 
         # Create command socket connection to Rover
@@ -79,8 +79,8 @@ class Rover:
 
         # Receive images on another thread until closed
         self.is_active = True
-        self.reader_thread = _MediaThread(self)
-        self.reader_thread.start()
+        #self.reader_thread = _MediaThread(self)
+        #self.reader_thread.start()
 
         # Set up treads
         self.leftTread = _RoverTread(self, 4)
