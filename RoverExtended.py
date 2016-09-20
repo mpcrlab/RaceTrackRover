@@ -29,13 +29,13 @@ class RoverExtended(Rover):
         return self.treads
 
     def setControls(self):
-        type = raw_input('Enter K to control from Keyboard, or W to control from Wheel (K/W): ').upper()
-        if type == "K":
+        controls = raw_input('Enter K to control from Keyboard, or W to control from Wheel (K/W): ').upper()
+        if controls == "K":
             self.controllerType = "Keyboard"
             self.controller = Keyboard()
             print ("To move around with the rover, click the PyGame window")
-            print ("W = Left, W = Forward, E = Right")
-        elif type == "W":
+            print ("W = Left, W = Forward, E = Right, S = Reverse")
+        elif controls == "W":
             self.controllerType = "Wheel"
             self.controller = Wheel()
         else:
