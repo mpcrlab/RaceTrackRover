@@ -6,9 +6,9 @@ class Keyboard():
         screen = pygame.display.set_mode((640, 400))
     def getAngle(self, key):
         key = chr(key)
-        if key == 'q':
+        if key == 'a':
             angle = 135
-        elif key == 'e':
+        elif key == 'd':
             angle = 35
         elif key == 's':
             angle = -180

@@ -1,12 +1,15 @@
 import pygame
 from Controller import *
 from rover import Rover
+import cv2, numpy as np, pygame
+from time import sleep
 import time
 
 class RoverExtended(Rover):
     def __init__(self):
         Rover.__init__(self)
         self.image = None
+        self.firstImage = None
         self.quit = False
         self.controller = None
         self.controllerType = None
@@ -16,12 +19,16 @@ class RoverExtended(Rover):
         self.run()
 
     def getNewTreads(self):
-        if self.angle > 100 and self.angle <= 180:
-            self.treads = [0, 1] #0,1
-        elif self.angle > 80 and self.angle < 100:
+        if self.angle <= 180 and self.angle >= 130:
+            self.treads = [-1,1]
+        elif self.angle < 130 and self.angle >= 100:
+            self.treads = [-0.05, 1] #0,1
+        elif self.angle < 100 and self.angle >= 80:
             self.treads = [1, 1]
-        elif self.angle < 80 and self.angle >= 0:
-            self.treads = [1, 0] #1,0
+        elif self.angle < 80 and self.angle >= 50:
+            self.treads = [1, -0.05] #1,0
+        elif self.angle < 50 and self.angle >= 0:
+            self.treads = [1,-1]
         elif self.angle == -180:
             self.treads = [-1, -1]
         else:
@@ -34,7 +41,7 @@ class RoverExtended(Rover):
             self.controllerType = "Keyboard"
             self.controller = Keyboard()
             print ("To move around with the rover, click the PyGame window")
-            print ("W = Left, W = Forward, E = Right, S = Reverse")
+            print ("W = Forward, A = Left, S = Reverse, D = Right")
         elif controls == "W":
             self.controllerType = "Wheel"
             self.controller = Wheel()
@@ -83,8 +90,16 @@ class RoverExtended(Rover):
             self.reverse()
 
     def endSession(self):
+        self.set_wheel_treads(0,0)
         self.quit = True
         pygame.quit()
+
+    def process_video_from_rover(self, jpegbytes, timestamp_10msec):
+        window_name = 'Machine Perception and Cognitive Robotics'
+        array_of_bytes = np.fromstring(jpegbytes, np.uint8)
+        self.image = cv2.imdecode(array_of_bytes, flags=3)
+        k = cv2.waitKey(5) & 0xFF
+        return self.image
 
     def run(self):
         print self.get_battery_percentage()
@@ -94,13 +109,14 @@ class RoverExtended(Rover):
         while not self.quit:
             if self.controllerType == "Wheel":
                 self.angle = self.controller.getAngle()
+                self.useButtons()
             else:
                 key = self.controller.getActiveKey()
                 if key:
                     self.angle = self.controller.getAngle(key)
-            if self.controllerType == "Wheel":
-                self.useButtons()
+            cv2.imshow("RoverCam", self.image)
             newTreads = self.getNewTreads()
+            # self.process_video_from_rover()
             oldTime = time.time()
             timer = abs(newTime - oldTime)
             if oldTreads != newTreads:
