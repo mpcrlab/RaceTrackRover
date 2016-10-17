@@ -4,11 +4,15 @@ from rover import Rover
 import cv2, numpy as np, pygame
 from time import sleep
 import time
+import os
+import sys
 
 class RoverExtended(Rover):
     def __init__(self):
         Rover.__init__(self)
         self.image = None
+        self.angles = []
+        self.photos = []
         self.firstImage = None
         self.quit = False
         self.controller = None
@@ -114,8 +118,14 @@ class RoverExtended(Rover):
                 key = self.controller.getActiveKey()
                 if key:
                     self.angle = self.controller.getAngle(key)
+                    if (self.angle == 1000):
+                        self.Quit()
             cv2.imshow("RoverCam", self.image)
+            self.imgEdges = self.edges(self.image)
+            cv2.imshow("RoverCamEdges", self.imgEdges)
             newTreads = self.getNewTreads()
+            self.angles.append(self.angle)
+            self.photos.append(self.image)
             # self.process_video_from_rover()
             oldTime = time.time()
             timer = abs(newTime - oldTime)
@@ -126,3 +136,25 @@ class RoverExtended(Rover):
                 oldTreads = newTreads
                 self.set_wheel_treads(newTreads[0],newTreads[1])
         self.endSession()
+
+    def edges(self,image):
+       imgEdges = cv2.Canny(image,50,200)
+       return imgEdges
+
+    def Quit(self):
+        self.set_wheel_treads(0,0)
+        self.quit = True
+        self.close()
+        pygame.quit()
+        lenAngles = len(self.angles)
+        directory =  os.getcwd()
+        newpath = directory +"/Run " + str(time.time())
+        if not os.path.exists(newpath):
+            os.makedirs(newpath)
+        fname = newpath + "/ang"
+        np.save(fname,self.angles)
+        fname = newpath + "/img"
+        np.save(fname,self.photos)
+        sys.exit()
+
+

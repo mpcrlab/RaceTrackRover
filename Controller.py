@@ -12,6 +12,8 @@ class Keyboard():
             angle = 35
         elif key == 's':
             angle = -180
+        elif key == 'z':
+            return 1000
         else:
             angle = 90
         return angle
