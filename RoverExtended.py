@@ -11,6 +11,8 @@ class RoverExtended(Rover):
     def __init__(self):
         Rover.__init__(self)
         self.d = Data()
+        self.clock = pygame.time.Clock()
+        self.FPS = 30
         self.image = None
         self.firstImage = None
         self.quit = False
@@ -66,6 +68,9 @@ class RoverExtended(Rover):
     def useButtons(self):
         self.isReversed = False
         buttons = self.controller.getButtonStates()
+        if len(buttons) == 0:
+            print "\n\n Plug in the wheel!"
+            sys.exit()
         # left handel under wheel
         if buttons[0] == 1:
             print "Pressed button 1"
@@ -156,6 +161,8 @@ class RoverExtended(Rover):
                 newTime = time.time()
                 oldTreads = newTreads
                 self.set_wheel_treads(newTreads[0],newTreads[1])
+
+            self.clock.tick(self.FPS)
         self.endSession()
 
     def edges(self,image):
