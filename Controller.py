@@ -5,17 +5,13 @@ class Keyboard():
     def __init__(self):
         screen = pygame.display.set_mode((640, 400))
     def getAngle(self, key):
-        key = chr(key)
-        if key == 'a':
+        angle = None
+        if key == 'w':
+            angle = 90
+        elif key == 'a':
             angle = 135
         elif key == 'd':
             angle = 35
-        elif key == 's':
-            angle = -180
-        elif key == 'z':
-            return 1000
-        else:
-            angle = 90
         return angle
 
     def getActiveKey(self):
@@ -57,7 +53,7 @@ class Wheel():
     def getButtonStates(self):
         # Get count of joysticks
         joystick_count = pygame.joystick.get_count()
-
+        buttons = []
         # For each joystick:
         for i in range(joystick_count):
             joystick = pygame.joystick.Joystick(i)
