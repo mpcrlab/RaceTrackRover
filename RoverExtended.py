@@ -64,6 +64,7 @@ class RoverExtended(Rover):
     # takes input entire buttons array
     # looks for "1"s and calls functions for that button
     def useButtons(self):
+        self.isReversed = False
         buttons = self.controller.getButtonStates()
         # left handel under wheel
         if buttons[0] == 1:
@@ -73,7 +74,7 @@ class RoverExtended(Rover):
             print "Pressed button 2"
         # top left button
         elif buttons[2] == 1:
-            self.endSession()
+            self.quit = True
         # top right button
         elif buttons[3] == 1:
             self.freeze()
@@ -91,10 +92,10 @@ class RoverExtended(Rover):
             print "Pressed button 8"
         # gear shift pushed towards you
         elif buttons[8] == 1:
-            self.reverse()
+            self.isReversed = True
         # gear shift pushed away from you
         elif buttons[9] == 1:
-            self.reverse()
+            self.isReversed = True
 
     def endSession(self):
         self.set_wheel_treads(0,0)
@@ -136,16 +137,14 @@ class RoverExtended(Rover):
                 key = self.controller.getActiveKey()
                 if key:
                     self.useKey(key)
-                self.getNewTreads()
-                if self.isReversed:
-                    self.treads = [-1,-1]
             cv2.imshow("RoverCam", self.image)
             self.imgEdges = self.edges(self.image)
             cv2.imshow("RoverCamEdges", self.imgEdges)
-            if self.controllerType == "Wheel":
-                self.getNewTreads()
+            self.getNewTreads()
+            if self.isReversed:
+                self.treads = [-1,-1]
             newTreads = self.treads
-            if self.canSave:
+            if self.canSave and self.isReversed == False:
                 self.d.angles.append(self.angle)
                 self.d.photos.append(self.image)
             # self.process_video_from_rover()
