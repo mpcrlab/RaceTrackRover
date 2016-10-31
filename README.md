@@ -13,6 +13,7 @@ When using the keyboard, you need to go back to the PyGame window before being a
   
   D: Right
 
+  Z: Ends program and save data
 
 ##Wheel Information
 The wheel outputs an angle between 0 and 180. 
@@ -33,7 +34,7 @@ The wheel outputs an angle between 0 and 180.
 **Currently:** Nothing
 
 **Button 3:** Top left button
-**Currently:** Ends program
+**Currently:** Ends program and saves data
 
 **Button 4:** Top right button
 **Currently:** sets treads to 0,0 while held (stops rover in place)
@@ -54,4 +55,4 @@ The wheel outputs an angle between 0 and 180.
 **Currently:** Reverse
 
 **Button 10:** Gear shift pushed away from you
-**Currently:** Also reverse
+**Currently:** Also reverse (doesn't have to be)

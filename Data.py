@@ -7,8 +7,7 @@ class Data():
         self.photos = []
 
     def load(self):
-        # dir = raw_input('Enter the file name you would like to load?')
-        # self.angles = np.loadtxt(dir)
+        pass
 
     def save(self):
         directory =  os.getcwd()
@@ -16,10 +15,9 @@ class Data():
         if not os.path.exists(newpath):
             os.makedirs(newpath)
         fname = newpath + "/ang"
-        fname = str(fname)
-        ang = np.array(self.angles, np.int32)
-        np.savetxt(fname, ang)
+        # self.angles = np.array(self.angles, dtype=np.float)
+        # np.savetxt(fname,self.angles)
+        np.save(fname, self.angles)
         fname = newpath + "/img"
-        fname = str(fname)
-        pho = np.array(self.photos, np.int32)
-        np.savetxt(fname, pho)
+        np.save(fname,self.photos)
+        print "Data saved!"
