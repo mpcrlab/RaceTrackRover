@@ -15,11 +15,15 @@ class RoverExtended(Rover):
         self.FPS = 30
         self.image = None
         self.firstImage = None
+        self.count = 1
         self.quit = False
         self.controller = None
         self.controllerType = None
         self.canSave = False
+        self.paused = False
         self.isReversed = False
+        self.isLearning = False
+        self.lightsOn = False
         # angle ranges from 0 to 180 where 180 = hard left, 90 = forward and 0 = hard right
         self.angle = None
         self.treads = [0,0]
@@ -42,6 +46,7 @@ class RoverExtended(Rover):
         self.canSave = raw_input('Do you want this data to be recorded? (Y/N)').upper()
         if self.canSave == 'Y':
             self.canSave = True
+            self.isLearning = True
         else:
             self.canSave = False
         if controls == "K":
@@ -63,44 +68,63 @@ class RoverExtended(Rover):
     def freeze(self):
         self.treads = [0,0]
         self.set_wheel_treads(0,0)
+
     # takes input entire buttons array
     # looks for "1"s and calls functions for that button
     def useButtons(self):
-        self.isReversed = False
         buttons = self.controller.getButtonStates()
         if len(buttons) == 0:
             print "\n\n Plug in the wheel!"
             sys.exit()
-        # left handel under wheel
-        if buttons[0] == 1:
-            print "Pressed button 1"
-        # right handel under wheel
-        elif buttons[1] == 1:
-            print "Pressed button 2"
-        # top left button
-        elif buttons[2] == 1:
-            self.quit = True
-        # top right button
-        elif buttons[3] == 1:
-            self.freeze()
-        # middle left button
-        elif buttons[4] == 1:
-            print "Pressed button 5"
-        # middle right button
-        elif buttons[5] == 1:
-            print "Pressed button 6"
-        # bottom left button
-        elif buttons[6] == 1:
-            print "Pressed button 7"
-        # bottom right button
-        elif buttons[7] == 1:
-            print "Pressed button 8"
-        # gear shift pushed towards you
-        elif buttons[8] == 1:
-            self.isReversed = True
-        # gear shift pushed away from you
-        elif buttons[9] == 1:
-            self.isReversed = True
+
+        # only runs once per press, instead of constant hold down
+        if not any(buttons):
+            self.count = 0
+        if any(buttons) and self.count == 0:
+            self.count = 1
+            # left handel under wheel
+            if buttons[0] == 1:
+                self.lightsOn = not self.lightsOn
+                if self.lightsOn:
+                    print "Lights on"
+                else:
+                    print "Lights off"
+            # right handel under wheel
+            elif buttons[1] == 1:
+                print "Battery percentage:", self.get_battery_percentage()
+            # top left button
+            elif buttons[2] == 1:
+                self.paused = not self.paused
+                if self.paused:
+                    print "Movement stopped"
+                else:
+                    print "Movement started"
+            # top right button
+            elif buttons[3] == 1:
+                self.isLearning = not self.isLearning
+                if self.isLearning:
+                    print "Learning started"
+                else:
+                    print "Learning stopped"
+            # middle left button
+            elif buttons[4] == 1:
+                self.eraseFrames(self.FPS)
+            # middle right button
+            elif buttons[5] == 1:
+                self.eraseFrames(self.FPS * 60)
+            # bottom left button
+            elif buttons[6] == 1:
+                print len(self.d.angles), "frames saved"
+            # bottom right button
+            elif buttons[7] == 1:
+                self.quit = True
+                print "Program stopping..."
+            # gear shift pushed towards you
+            elif buttons[8] == 1:
+                self.isReversed = not self.isReversed
+            # gear shift pushed away from you
+            elif buttons[9] == 1:
+                self.isReversed = not self.isReversed
 
     def endSession(self):
         self.set_wheel_treads(0,0)
@@ -117,6 +141,7 @@ class RoverExtended(Rover):
         return self.image
 
     def useKey(self, key):
+        self.isReversed = False
         key = chr(key)
         if key == 'w' or key == 'a' or key == 'd':
             self.angle = self.controller.getAngle(key)
@@ -126,8 +151,24 @@ class RoverExtended(Rover):
             self.isReversed = True
         elif key == 'b':
             print self.get_battery_percentage()
-        if key != 's':
-            self.isReversed = False
+        elif key == ' ':
+            self.paused = not self.paused
+        elif key == 'p':
+            self.eraseFrames(self.FPS)
+        elif key == 'l':
+            self.pauseLearning()
+
+    def eraseFrames(self, count):
+        size = len(self.d.angles)
+        if (size - count > 0):
+            print "--", "Deleting 1 second of frames!"
+            self.d.angles = self.d.angles[:size - count]
+            self.d.photos = self.d.photos[:size - count]
+        else:
+            print "Couldn't delete! List has less than", count, "frames!"
+
+    def pauseLearning(self):
+        self.isLearning = not self.isLearning
 
     def run(self):
         print self.get_battery_percentage()
@@ -142,14 +183,19 @@ class RoverExtended(Rover):
                 key = self.controller.getActiveKey()
                 if key:
                     self.useKey(key)
-            cv2.imshow("RoverCam", self.image)
-            self.imgEdges = self.edges(self.image)
-            cv2.imshow("RoverCamEdges", self.imgEdges)
             self.getNewTreads()
             if self.isReversed:
-                self.treads = [-1,-1]
+                tr = list(self.treads)
+                tr = [tr[1] * -1, tr[0] * -1]
+                self.treads = tr
+            if self.paused:
+                self.freeze()
+            if self.lightsOn:
+                self.turn_the_lights_on()
+            else:
+                self.turn_the_lights_off()
             newTreads = self.treads
-            if self.canSave and self.isReversed == False:
+            if self.canSave and not self.isReversed and self.isLearning:
                 self.d.angles.append(self.angle)
                 self.d.photos.append(self.image)
             # self.process_video_from_rover()
@@ -161,6 +207,9 @@ class RoverExtended(Rover):
                 newTime = time.time()
                 oldTreads = newTreads
                 self.set_wheel_treads(newTreads[0],newTreads[1])
+            cv2.imshow("RoverCam", self.image)
+            self.imgEdges = self.edges(self.image)
+            cv2.imshow("RoverCamEdges", self.imgEdges)
 
             self.clock.tick(self.FPS)
         self.endSession()
