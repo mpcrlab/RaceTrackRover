@@ -5,7 +5,7 @@ Seemlessly pick between Wheel and Keyboard to control the rover
 ##Important/Bug
 When using the keyboard, you need to go back to the PyGame window before being able to control the rover.
 ##Keyboard Controls
-  W: Foward
+  W: Forward
   
   A: Left
 
@@ -20,7 +20,7 @@ The wheel outputs an angle between 0 and 180.
 ####Controls
 0: Farthest it can go to the RIGHT
 
-90: Center and rover goes foward
+90: Center and rover goes forward
 
 180: Farthest it can go to the LEFT
 
@@ -28,31 +28,31 @@ The wheel outputs an angle between 0 and 180.
 ###Wheel Button Layout
 
 **Button 1:** Left handel under wheel
-**Currently:** Nothing
+**Currently:** Toggle Lights
 
 **Button 2:** Right handel under wheel
-**Currently:** Nothing
+**Currently:** Display Battery Percentage
 
 **Button 3:** Top left button
-**Currently:** Ends program and saves data
+**Currently:** Toggle movement
 
 **Button 4:** Top right button
-**Currently:** sets treads to 0,0 while held (stops rover in place)
+**Currently:** Toggle Learning
 
 **Button 5:** Middle left button
-**Currently:** Nothing
+**Currently:** Erase 1 second of memory
 
 **Button 6:** Middle right button
-**Currently:** Nothing
+**Currently:** Erase 60 seconds of memory
 
 **Button 7:** Bottom left button
-**Currently:** Nothing
+**Currently:** Display saved frame count
 
 **Buton 8:** Bottom right button
-**Currently:** Nothing
+**Currently:** Saves data and Quits
 
 **Button 9:** Gear shift pushed towards you
-**Currently:** Reverse
+**Currently:** Toggle reverse
 
 **Button 10:** Gear shift pushed away from you
-**Currently:** Also reverse (doesn't have to be)
+**Currently:** Toggle reverse

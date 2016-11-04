@@ -195,7 +195,7 @@ class RoverExtended(Rover):
             else:
                 self.turn_the_lights_off()
             newTreads = self.treads
-            if self.canSave and not self.isReversed and self.isLearning:
+            if self.canSave and not self.isReversed and self.isLearning and not self.paused:
                 self.d.angles.append(self.angle)
                 self.d.photos.append(self.image)
             # self.process_video_from_rover()
