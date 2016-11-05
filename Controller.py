@@ -3,7 +3,7 @@ import pygame
 
 class Keyboard():
     def __init__(self):
-        screen = pygame.display.set_mode((640, 400))
+        pass
     def getAngle(self, key):
         angle = None
         if key == 'w':

@@ -1,9 +1,10 @@
 import pygame
 from Controller import *
 from Data import *
+from Pygame_UI import *
 from rover import Rover
-import cv2, numpy as np, pygame
-from time import sleep
+import cv2
+import numpy as np
 import time
 import sys
 
@@ -11,6 +12,7 @@ class RoverExtended(Rover):
     def __init__(self):
         Rover.__init__(self)
         self.d = Data()
+        self.displayUI = Pygame_UI()
         self.clock = pygame.time.Clock()
         self.FPS = 30
         self.image = None
@@ -111,7 +113,7 @@ class RoverExtended(Rover):
                 self.eraseFrames(self.FPS)
             # middle right button
             elif buttons[5] == 1:
-                self.eraseFrames(self.FPS * 60)
+                self.eraseFrames(self.FPS * 10)
             # bottom left button
             elif buttons[6] == 1:
                 print len(self.d.angles), "frames saved"
@@ -170,12 +172,34 @@ class RoverExtended(Rover):
     def pauseLearning(self):
         self.isLearning = not self.isLearning
 
+    def displayAllMessages(self):
+        black = (0,0,0)
+        if self.lightsOn:
+            lightsBool = "On"
+        else:
+            lightsBool = "Off"
+
+        if self.paused:
+            motionBool = "Stopped"
+        else:
+            motionBool = "Moving"
+        self.displayUI.display_message("Controller Type: " + self.controllerType, black, 0, 0)
+        self.displayUI.display_message("Can Collect Data (initialized at start): " + str(self.canSave), black, 0, self.displayUI.fontSize)
+        self.displayUI.display_message("Motion: " + motionBool, black, 0, self.displayUI.fontSize*2)
+        self.displayUI.display_message("Reversed: " + str(self.isReversed), black, 0, self.displayUI.fontSize*3)
+        self.displayUI.display_message("Currently Recording Data: " + str(self.isLearning), black, 0, self.displayUI.fontSize*4)
+        self.displayUI.display_message("Lights: " + lightsBool, black, 0, self.displayUI.fontSize*5)
+        self.displayUI.display_message("Steering Angle: " + str(self.angle), black, 0, self.displayUI.fontSize*6)
+        self.displayUI.display_message("Treads: " + str(self.treads), black, 0, self.displayUI.fontSize*7)
+        self.displayUI.display_message("Number of Frames Collected: " + str(len(self.d.angles)), black, 0, self.displayUI.fontSize*8)
+
     def run(self):
         print self.get_battery_percentage()
         oldTreads = None
         self.setControls()
         newTime = time.time()
         while not self.quit:
+            self.displayAllMessages()
             if self.controllerType == "Wheel":
                 self.angle = self.controller.getAngle()
                 self.useButtons()
@@ -212,6 +236,8 @@ class RoverExtended(Rover):
             cv2.imshow("RoverCamEdges", self.imgEdges)
 
             self.clock.tick(self.FPS)
+            pygame.display.flip()
+            self.displayUI.screen.fill((255,255,255))
         self.endSession()
 
     def edges(self,image):
