@@ -4,7 +4,7 @@ class Pygame_UI:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption('Dashboard')
-        self.screen_size = [640, 480]
+        self.screen_size = [700, 480]
         self.screen = pygame.display.set_mode(self.screen_size)
         self.screen.fill((255,255,255))
         self.fontSize = 30

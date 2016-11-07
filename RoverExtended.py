@@ -53,6 +53,7 @@ class RoverExtended(Rover):
             self.canSave = False
         if controls == "K":
             self.controllerType = "Keyboard"
+            self.paused = True
             self.controller = Keyboard()
             print ("To move around with the rover, click the PyGame window")
             print ("W = Forward, A = Left, S = Reverse, D = Right")
@@ -87,27 +88,15 @@ class RoverExtended(Rover):
             # left handel under wheel
             if buttons[0] == 1:
                 self.lightsOn = not self.lightsOn
-                if self.lightsOn:
-                    print "Lights on"
-                else:
-                    print "Lights off"
             # right handel under wheel
             elif buttons[1] == 1:
                 print "Battery percentage:", self.get_battery_percentage()
             # top left button
             elif buttons[2] == 1:
                 self.paused = not self.paused
-                if self.paused:
-                    print "Movement stopped"
-                else:
-                    print "Movement started"
             # top right button
             elif buttons[3] == 1:
-                self.isLearning = not self.isLearning
-                if self.isLearning:
-                    print "Learning started"
-                else:
-                    print "Learning stopped"
+                pass
             # middle left button
             elif buttons[4] == 1:
                 self.eraseFrames(self.FPS)
@@ -147,6 +136,7 @@ class RoverExtended(Rover):
         key = chr(key)
         if key == 'w' or key == 'a' or key == 'd':
             self.angle = self.controller.getAngle(key)
+            self.paused = False
         elif key == 'z':
             self.quit = True
         elif key == 's':
@@ -174,25 +164,20 @@ class RoverExtended(Rover):
 
     def displayAllMessages(self):
         black = (0,0,0)
-        if self.lightsOn:
-            lightsBool = "On"
-        else:
-            lightsBool = "Off"
+        lightsBool = "On" if self.lightsOn else "Off"
+        motionBool = "Stopped" if self.paused else "Moving"
+        learning = "Learning" if self.isLearning else "Not Learning"
 
-        if self.paused:
-            motionBool = "Stopped"
-        else:
-            motionBool = "Moving"
-        self.displayUI.display_message("Controller Type: " + self.controllerType, black, 0, 0)
-        self.displayUI.display_message("Can Collect Data (initialized at start): " + str(self.canSave), black, 0, self.displayUI.fontSize)
-        self.displayUI.display_message("Motion: " + motionBool, black, 0, self.displayUI.fontSize*2)
-        self.displayUI.display_message("Reversed: " + str(self.isReversed), black, 0, self.displayUI.fontSize*3)
-        self.displayUI.display_message("Currently Recording Data: " + str(self.isLearning), black, 0, self.displayUI.fontSize*4)
-        self.displayUI.display_message("Lights: " + lightsBool, black, 0, self.displayUI.fontSize*5)
-        self.displayUI.display_message("Steering Angle: " + str(self.angle), black, 0, self.displayUI.fontSize*6)
-        self.displayUI.display_message("Treads: " + str(self.treads), black, 0, self.displayUI.fontSize*7)
-        self.displayUI.display_message("Number of Frames Collected: " + str(len(self.d.angles)), black, 0, self.displayUI.fontSize*8)
-
+        self.displayUI.display_message("Rover Battery Percentage: " + str(self.get_battery_percentage()), black, 0,0)
+        self.displayUI.display_message("Controller Type: " + self.controllerType, black, 0, self.displayUI.fontSize * 1)
+        self.displayUI.display_message("Lights: " + lightsBool, black, 0, self.displayUI.fontSize*2)
+        self.displayUI.display_message("Steering Angle: " + str(self.angle), black, 0, self.displayUI.fontSize*3)
+        self.displayUI.display_message("Treads: " + str(self.treads), black, 0, self.displayUI.fontSize*4)
+        self.displayUI.display_message("Motion: " + motionBool, black, 0, self.displayUI.fontSize*5)
+        self.displayUI.display_message("Reversed: " + str(self.isReversed), black, 0, self.displayUI.fontSize*6)
+        self.displayUI.display_message("Number of Frames Collected: " + str(len(self.d.angles)), black, 0, self.displayUI.fontSize*7)
+        self.displayUI.display_message("Can Collect Data (initialized at start): " + str(self.canSave), black, 0, self.displayUI.fontSize*8)
+        self.displayUI.display_message("To record data, must not be paused and not be reversed: " + learning, black, 0, self.displayUI.fontSize * 9)
     def run(self):
         print self.get_battery_percentage()
         oldTreads = None
@@ -219,7 +204,8 @@ class RoverExtended(Rover):
             else:
                 self.turn_the_lights_off()
             newTreads = self.treads
-            if self.canSave and not self.isReversed and self.isLearning and not self.paused:
+            self.isLearning = self.canSave and not self.isReversed and not self.paused
+            if self.isLearning:
                 self.d.angles.append(self.angle)
                 self.d.photos.append(self.image)
             # self.process_video_from_rover()
