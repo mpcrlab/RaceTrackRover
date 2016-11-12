@@ -22,10 +22,8 @@ from tflearn.layers.estimator import regression
 # import tflearn.datasets.oxflower17 as oxflower17
 # X, Y = oxflower17.load_data(one_hot=True)
 
-
-# FIXME: Load in proper data files, possibly condense all data files into one?
-X = np.load("run/img.npy")
-Y = np.load("run/ang.npy")
+X = np.load("dataset/img.npy")
+Y = np.load("dataset/ang.npy")
 
 X = X / 255
 
