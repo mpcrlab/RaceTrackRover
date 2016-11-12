@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import time
 import sys
+import math
 
 class RoverExtended(Rover):
     def __init__(self):
@@ -179,7 +180,7 @@ class RoverExtended(Rover):
         self.displayUI.display_message("Can Collect Data (initialized at start): " + str(self.canSave), black, 0, self.displayUI.fontSize*8)
         self.displayUI.display_message("To record data, must not be paused and not be reversed: " + learning, black, 0, self.displayUI.fontSize * 9)
 
-    def displayWithAngle(angle, frame):
+    def displayWithAngle(self, angle, frame):
         radius = 80
         angle = angle * math.pi / 180
         y = 240 - int(math.sin(angle) * radius)
@@ -188,7 +189,7 @@ class RoverExtended(Rover):
         cv2.line(frame, (160, 240), (x, y), (0, 0, 0), 5)
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame, str(int(angle * 180 / math.pi)), (x, y), font, .8, (255, 0, 255), 2, cv2.LINE_AA)
-        cv2.imshow("Frame", frame)
+        return frame
 
     def run(self):
         print self.get_battery_percentage()
@@ -230,7 +231,8 @@ class RoverExtended(Rover):
                 oldTreads = newTreads
                 self.set_wheel_treads(newTreads[0],newTreads[1])
             cv2.imshow("RoverCam", self.image)
-            self.displayWithAngle(self.angle, self.image)
+            angle = self.displayWithAngle(self.angle, self.image)
+            cv2.imshow("Angle", angle)
             self.imgEdges = self.edges(self.image)
             cv2.imshow("RoverCamEdges", self.imgEdges)
 
