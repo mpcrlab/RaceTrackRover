@@ -232,8 +232,8 @@ class RoverExtended(Rover):
                 self.set_wheel_treads(newTreads[0],newTreads[1])
             cv2.imshow("RoverCam", self.image)
             if self.angle:
-            	angle = self.displayWithAngle(self.angle, self.image)
-            	cv2.imshow("Angle", angle)
+            	angleframe = self.displayWithAngle(self.angle, self.image)
+            	cv2.imshow("Angle", angleframe)
             self.imgEdges = self.edges(self.image)
             cv2.imshow("RoverCamEdges", self.imgEdges)
 
