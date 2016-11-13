@@ -58,3 +58,16 @@ model = tflearn.DNN(network, checkpoint_path='model_alexnet',
 model.fit(X, Y, n_epoch=1000, validation_set=0.1, shuffle=True,
           show_metric=True, batch_size=64, snapshot_step=200,
 snapshot_epoch=False, run_id='alexnet_oxflowers17')
+
+
+
+# Save a model
+# model.save('my_model.tflearn')
+# Load a model
+# model.load('my_model.tflearn')
+
+
+# Run model on new sample 
+# model.predict(X)
+
+
