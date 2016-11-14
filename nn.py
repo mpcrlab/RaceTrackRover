@@ -53,21 +53,11 @@ network = regression(network, optimizer='momentum',
                      learning_rate=0.001)
 
 # Training
-model = tflearn.DNN(network, checkpoint_path='model_alexnet',
+model = tflearn.DNN(network, checkpoint_path='model_rtr',
                     max_checkpoints=1, tensorboard_verbose=2)
 model.fit(X, Y, n_epoch=1000, validation_set=0.1, shuffle=True,
           show_metric=True, batch_size=64, snapshot_step=200,
-snapshot_epoch=False, run_id='alexnet_oxflowers17')
-
-
+snapshot_epoch=False, run_id='model_racetrackrover')
 
 # Save a model
-# model.save('my_model.tflearn')
-# Load a model
-# model.load('my_model.tflearn')
-
-
-# Run model on new sample 
-# model.predict(X)
-
-
+model.save('racetrackrover.model')
