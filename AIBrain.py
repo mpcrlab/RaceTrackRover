@@ -18,12 +18,12 @@ from tflearn.layers.conv import conv_2d, max_pool_2d
 from tflearn.layers.normalization import local_response_normalization
 from tflearn.layers.estimator import regression
 
+from rover import Rover
+from Pygame_UI import *
 import numpy as np
 import pygame
-#from rover import Rover
 import cv2
 import time
-import sys
 import math
 
 #load the data
@@ -33,13 +33,16 @@ Y = np.load("dataset/ang.npy")
 X = X / 255
 
 Y= (Y - 90)/90
-class AIBrain():
+
+class AIBrain(Rover):
 	def __init__(self):
+		Rover.__init__(self)
 		self.fname = 'racetrackrover.model'
 
-		self.model = alexNetModel()
+		self.model = self.alexNetModel()
 		self.model = self.loadModel(self.fname)
 
+		self.displayUI = Pygame_UI()
 		self.angle = None
 		self.quit = False
 		self.image = None
@@ -53,6 +56,12 @@ class AIBrain():
 		oldTreads = None
 		newTime = time.time()
 		while not self.quit:
+			for event in pygame.event.get():
+				if event.type ==pygame.QUIT:
+					self.quit == True
+				if event.type == pygame.KEYDOWN:
+					if event.key == "Q":
+						self.quit == True
 			self.angle = self.getAngle(self.image)
 			# self.useButtons()
 			self.getNewTreads()
@@ -73,6 +82,7 @@ class AIBrain():
 			cv2.imshow("RoverCamEdges", self.imgEdges)
 
 			self.clock.tick(self.FPS)
+			self.displayUI.screen.fill((255,255,255))
 		self.endSession()
 
 	def getAngle(self):
@@ -163,3 +173,5 @@ class AIBrain():
 	def saveModel(self, model, fname):
 		model.save(fname)
 		return model
+
+AI = AIBrain()
