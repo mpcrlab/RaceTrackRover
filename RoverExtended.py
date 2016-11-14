@@ -124,6 +124,7 @@ class RoverExtended(Rover):
             self.d.save()
         pygame.quit()
         cv2.destroyAllWindows()
+        sys.exit()
 
     def process_video_from_rover(self, jpegbytes, timestamp_10msec):
         window_name = 'Machine Perception and Cognitive Robotics'
