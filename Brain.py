@@ -3,10 +3,10 @@ from __future__ import division, print_function, absolute_import
 from keras.models import load_model
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
-from AlexNet import AlexNet
-from NvidiaNet import NvidiaNet
+from models.AlexNet import AlexNet
+from models.NvidiaNet import NvidiaNet
 
-from util.generator import generate_examples
+from utils.generator import generate_examples
 
 import pygame
 from Controller import *
@@ -222,3 +222,8 @@ class Brain(Rover):
             pygame.display.flip()
             self.displayUI.screen.fill((255,255,255))
         self.endSession()
+
+
+if __name__ == "__main__":
+    brain = Brain()
+    brain.train_model(dataset='output.h5', model_output='model_output.h5', model_type='alex_net')

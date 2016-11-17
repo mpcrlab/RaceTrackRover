@@ -87,10 +87,11 @@ if input == 'M':
 elif input == 'D':
 	fname = raw_input("Paste the run file name here: ")
 	frames, angles = getData(fname)
-	displayData(frames, angles)
+	displayData(frames, angles, False)
 else:
 	if os.path.exists(combined):
 		displayCombined()
 	else:
 		writeEntireDataset(combined)
 		displayCombined()
+
