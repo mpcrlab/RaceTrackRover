@@ -28,3 +28,4 @@ def generate_examples(hdf5_file, batch_size, start, end):
             np.random.shuffle(data_y)
 
             yield (data_x, data_y)
+

@@ -6,6 +6,18 @@ from tflearn.layers.conv import conv_2d, max_pool_2d
 from tflearn.layers.normalization import local_response_normalization
 from tflearn.layers.estimator import regression
 
+from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
+
+from models.AlexNet import AlexNet
+from models.NvidiaNet import NvidiaNet
+from models.VGG16 import VGG16Net
+from models.SimpleNet import SimpleNet
+
+from utils.generator import generate_examples
+
+import h5py
+import datetime
+import os
 import pygame
 from Controller import *
 from Data import *
@@ -15,24 +27,13 @@ import cv2
 import numpy as np
 import time
 import sys
-import math
-
-#load the data
-X = np.load("dataset/img.npy")
-Y = np.load("dataset/ang.npy")
-
-X = X / 255
-
-Y= (Y - 90)/90
-
 
 class AIBrain(Rover):
     def __init__(self):
         Rover.__init__(self)
 
-        self.fname = 'racetrackrover.model'
-        self.model = self.alexNetModel()
-        self.model = self.loadModel(self.model, self.fname)
+        self.model = NvidiaNet()
+        self.model.load_weights(os.getcwd() + '/model_tmp.h5')
         
         self.displayUI = Pygame_UI()
         self.clock = pygame.time.Clock()
@@ -44,6 +45,10 @@ class AIBrain(Rover):
         # angle ranges from 0 to 180 where 180 = hard left, 90 = forward and 0 = hard right
         self.angle = None
         self.treads = [0,0]
+        i=0
+        while self.image == None:
+            i+=1
+        print(i)
         self.run()
 
     def getNewTreads(self):
@@ -105,55 +110,13 @@ class AIBrain(Rover):
         # self.displayUI.display_message("To record data, must not be paused and not be reversed: " + learning, black, 0, self.displayUI.fontSize * 9)
 
     def getAngle(self):
-        angle = self.model.predict([self.image])
+        angle = self.model.predict([self.image.reshape(-1, 240, 320, 3)])
         angle = (90 * angle) + 90  # converts tanh (-1,1) to 0-180 range??
-        return angle
-
-    def alexNetModel(self):
-        # Building 'AlexNet'
-        network = input_data(shape=[None, 240, 320, 3])
-        network = conv_2d(network, 96, 11, strides=4, activation='relu')
-        network = max_pool_2d(network, 3, strides=2)
-        network = local_response_normalization(network)
-        network = conv_2d(network, 256, 5, activation='relu')
-        network = max_pool_2d(network, 3, strides=2)
-        network = local_response_normalization(network)
-        network = conv_2d(network, 384, 3, activation='relu')
-        network = conv_2d(network, 384, 3, activation='relu')
-        network = conv_2d(network, 256, 3, activation='relu')
-        network = max_pool_2d(network, 3, strides=2)
-        network = local_response_normalization(network)
-        network = fully_connected(network, 4096, activation='tanh')
-        network = dropout(network, 0.5)
-        network = fully_connected(network, 4096, activation='tanh')
-        network = dropout(network, 0.5)
-        network = fully_connected(network, 1, activation='tanh')
-        network = regression(network, optimizer='momentum',
-                             loss='categorical_crossentropy',
-                             learning_rate=0.001)
-
-        # Training
-        model = tflearn.DNN(network, checkpoint_path='model_rtr', max_checkpoints=1, tensorboard_verbose=2)
-        return model
-
-    def fitModel(self, model):
-        model.fit(X, Y, n_epoch=1000, validation_set=0.1, shuffle=True,
-                  show_metric=True, batch_size=64, snapshot_step=200,
-        snapshot_epoch=False, run_id='model_racetrackrover')
-        return model
-
-    def loadModel(self, model,fname):
-        model.load(fname)
-        return model
-
-    def saveModel(self, model, fname):
-        model.save(fname)
-        return model
+        return angle[0]
 
     def run(self):
         print(self.get_battery_percentage())
         oldTreads = None
-        time.sleep(5)
         self.controllerType = "Keyboard"
         self.controller = Keyboard()
         newTime = time.time()
@@ -162,7 +125,7 @@ class AIBrain(Rover):
             key = self.controller.getActiveKey()
             if key:
                 self.useKey(key)
-            self.angle = self.getAngle(self.image)
+            self.angle = self.getAngle()
             self.getNewTreads()
             newTreads = self.treads
             # self.process_video_from_rover()
@@ -179,3 +142,126 @@ class AIBrain(Rover):
             pygame.display.flip()
             self.displayUI.screen.fill((255,255,255))
         self.endSession()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        """
+        Other than the nvidia network with is from the End to End Deep Learning for Self Driving Cars paper
+
+        Model code was sourced from https://github.com/heuritech/convnets-keras
+        because i'm tired and want this to work
+        """
+
+        def data_split(hdf5_file, training_ratio=0.7, validation_ratio=0.1):
+            size = hdf5_file['x_dataset'].shape[0]
+            training_size = int(training_ratio * size)
+            validation_size = int(validation_ratio * size)
+            validation_end = training_size + validation_size
+
+            validation_data = validation_size != 0
+
+            return (0, training_size), (training_size + 1, validation_end), (validation_end + 1, size), validation_data
+
+        def input_shape(hdf5_file):
+            shape = hdf5_file['x_dataset'].shape[1:]
+            return shape
+
+        def train_model(dataset, model_output, model_type, training_ratio=0.7, validation_ratio=0.1, epoch=10,
+                        batch_size=50, learning_rate=0.01):
+            if dataset is None:
+                raise ValueError('No dataset specified')
+
+            hdf5_file = h5py.File(dataset, 'r')
+
+            train, validation, test, validation_data = data_split(hdf5_file=hdf5_file, training_ratio=training_ratio,
+                                                                  validation_ratio=validation_ratio)
+            train_start, train_end = train
+            validation_start, validation_end = validation
+            test_start, test_end = test
+
+            shape = input_shape(hdf5_file=hdf5_file)
+            height, width, channels = shape
+
+            if model_type in ['AlexNet', 'alexnet', 'ALEXNET', 'Alex', 'alex', 'ALEX', 'alex_net', 'Alex_Net',
+                              'ALEX_NET']:
+                model = AlexNet(learning_rate=learning_rate, width=width, height=height, channels=channels)
+            elif model_type in ['NvidiaNet', 'nvidianet', 'NVIDIANET', 'Nvidia', 'nvidia', 'NVIDIA', 'nvidia_net',
+                                'Nvidia_Net', 'NVIDIA_NET']:
+                model = NvidiaNet(learning_rate=learning_rate, width=width, height=height, channels=channels)
+            elif model_type in ['VGG16', 'vgg16', 'Vgg16', 'VGG', 'Vgg', 'vgg']:
+                model = VGG16Net(learning_rate=learning_rate, width=width, height=height, channels=channels)
+            elif model_type in ['SimpleNet', 'simplenet', 'SIMPLENET', 'Simplenet', 'simple', 'SIMPLE']:
+                model = SimpleNet(learning_rate=learning_rate, width=width, height=height, channels=channels)
+            else:
+                raise ValueError('Not a valid model type')
+                sys.exit(0)
+
+            train_start_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+            if model_output:
+                model_output_path, _ = os.path.splitext(model_output)
+                model_filename = model_output_path + '-' + train_start_time
+            else:
+                dataset_path, _ = os.path.splitext(dataset)
+                dataset_filename = dataset_path[dataset_path.find('/') + 1:]
+                model_filename = 'models/' + dataset_filename + '-' + train_start_time
+
+            loss_checkpoint = ModelCheckpoint(model_filename + '-val-loss-lowest.h5', monitor='val_loss', verbose=1,
+                                              save_best_only=True,
+                                              mode='min')
+            accuracy_checkpoint = ModelCheckpoint(model_filename + '-val-acc-highest.h5', monitor='val_acc', verbose=1,
+                                                  save_best_only=True,
+                                                  mode='max')
+            early_stopping = EarlyStopping(monitor='val_loss', patience=6, verbose=1, mode='min')
+            reduce_learning_rate = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5)
+
+            callbacks = [loss_checkpoint, accuracy_checkpoint]
+            if validation_data:
+                train_gen = generate_examples(hdf5_file=hdf5_file,
+                                              batch_size=batch_size,
+                                              start=train_start,
+                                              end=train_end)
+                validation_gen = generate_examples(hdf5_file=hdf5_file,
+                                                   batch_size=batch_size,
+                                                   start=validation_start,
+                                                   end=validation_end)
+
+                model.fit_generator(train_gen,
+                                    samples_per_epoch=train_end - train_start,
+                                    validation_data=validation_gen,
+                                    nb_val_samples=validation_end - validation_start,
+                                    nb_epoch=epoch,
+                                    verbose=1,
+                                    callbacks=callbacks)
+            else:
+                train_gen = generate_examples(hdf5_file=hdf5_file,
+                                              batch_size=batch_size,
+                                              start=train_start,
+                                              end=train_end)
+                model.fit_generator(train_gen,
+                                    samples_per_epoch=train_end - train_start,
+                                    nb_epoch=epoch,
+                                    verbose=1,
+                                    callbacks=callbacks)
+
+            model.save(model_filename + '.h5')
+            # Just to be safe
+            model.save('tmp.h5')
+
+            return model
+
+
+#train_model(dataset='output.h5', model_output='model_output.h5', model_type='SimpleNet', epoch=120, batch_size=256)

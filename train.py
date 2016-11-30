@@ -6,6 +6,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from models.AlexNet import AlexNet
 from models.NvidiaNet import NvidiaNet
 from models.VGG16 import VGG16Net
+from models.SimpleNet import SimpleNet
 
 from utils.generator import generate_examples
 
@@ -32,9 +33,11 @@ def data_split(hdf5_file, training_ratio=0.7, validation_ratio=0.1):
 
     return (0, training_size), (training_size + 1, validation_end), (validation_end + 1, size), validation_data
 
+
 def input_shape(hdf5_file):
     shape = hdf5_file['x_dataset'].shape[1:]
     return shape
+
 
 def train_model(dataset, model_output, model_type, training_ratio=0.7, validation_ratio=0.1, epoch=10, batch_size=50, learning_rate=0.01):
     if dataset is None:
@@ -56,6 +59,8 @@ def train_model(dataset, model_output, model_type, training_ratio=0.7, validatio
         model = NvidiaNet(learning_rate=learning_rate, width=width, height=height, channels=channels)
     elif model_type in ['VGG16', 'vgg16', 'Vgg16', 'VGG', 'Vgg', 'vgg']:
         model = VGG16Net(learning_rate=learning_rate, width=width, height=height, channels=channels)
+    elif model_type in ['SimpleNet', 'simplenet', 'SIMPLENET', 'Simplenet', 'simple', 'SIMPLE']:
+        model = SimpleNet(learning_rate=learning_rate, width=width, height=height, channels=channels)    
     else:
         raise ValueError('Not a valid model type')
         sys.exit(0)
@@ -80,26 +85,29 @@ def train_model(dataset, model_output, model_type, training_ratio=0.7, validatio
     reduce_learning_rate = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5)
 
     callbacks = [loss_checkpoint, accuracy_checkpoint]
-
     if validation_data:
-        model.fit_generator(generate_examples(hdf5_file=hdf5_file,
+        train_gen = generate_examples(hdf5_file=hdf5_file,
                                               batch_size=batch_size,
                                               start=train_start,
-                                              end=train_end),
-                            samples_per_epoch=train_end - train_start,
-                            validation_data=generate_examples(hdf5_file=hdf5_file,
-                                                              batch_size=batch_size,
-                                                              start=validation_start,
-                                                              end=validation_end),
-                            nb_val_samples=validation_end - validation_start,
-                            nb_epoch=epoch,
-                            verbose=1,
-                            callbacks=callbacks)
+                                              end=train_end)
+        validation_gen = generate_examples(hdf5_file=hdf5_file,
+                                              batch_size=batch_size,
+                                              start=validation_start,
+                                              end=validation_end)
+
+        model.fit_generator(train_gen,
+                                samples_per_epoch=train_end - train_start,
+                                validation_data=validation_gen,
+                                nb_val_samples=validation_end - validation_start,
+                                nb_epoch=epoch,
+                                verbose=1,
+                                callbacks=callbacks)
     else:
-        model.fit_generator(generate_examples(hdf5_file=hdf5_file,
+        train_gen = generate_examples(hdf5_file=hdf5_file,
                                               batch_size=batch_size,
                                               start=train_start,
-                                              end=train_end),
+                                              end=train_end)
+        model.fit_generator(train_gen,
                             samples_per_epoch=train_end - train_start,
                             nb_epoch=epoch,
                             verbose=1,
@@ -113,4 +121,5 @@ def train_model(dataset, model_output, model_type, training_ratio=0.7, validatio
 
 
 if __name__ == "__main__":
-    model = train_model(dataset='output.h5', model_output='model_output.h5', model_type='vgg', epoch=50, batch_size=16)
+    model = train_model(dataset='output_lowprecision.h5', model_output='alexnet_model_output.h5', model_type='alexnet', epoch=150, batch_size=32)
+    # model = train_model(dataset='output.h5', model_output='model_output.h5', model_type='SimpleNet', epoch=120, batch_size=256)
