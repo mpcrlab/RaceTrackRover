@@ -5,7 +5,7 @@ from keras.layers.pooling import AveragePooling2D
 from keras.optimizers import Nadam
 
 
-def NvidiaNet(learning_rate = 0.1, width=640, height=480, channels=3):
+def NvidiaNet(learning_rate = 0.1, width=320, height=240, channels=3):
     ch, row, col = channels, height, width  # camera format
 
     model = Sequential()

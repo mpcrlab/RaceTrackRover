@@ -1,11 +1,5 @@
 from __future__ import division, print_function, absolute_import
 
-import tflearn
-from tflearn.layers.core import input_data, dropout, fully_connected
-from tflearn.layers.conv import conv_2d, max_pool_2d
-from tflearn.layers.normalization import local_response_normalization
-from tflearn.layers.estimator import regression
-
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 from models.AlexNet import AlexNet
@@ -149,7 +143,7 @@ class AIBrain(Rover):
 
     def displayWithAngle(self, angle, frame):
         imgAngle = frame.copy()
-        if self.angle and not self.isReversed:
+        if self.predictedAngle:
             radius = 80
             angle = angle * math.pi / 180
             y = 240 - int(math.sin(angle) * radius)
