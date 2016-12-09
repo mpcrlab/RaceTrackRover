@@ -7,7 +7,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Rover HDF5 Concatenator')
 	parser.add_argument('--first_dataset', type=str, default='training_data/output.h5')
 	parser.add_argument('--second_dataset', type=str, default='training_data/output.h5')
-	parser.add_argument('--output', type=str, default='output.h5')
+	parser.add_argument('--output', type=str, default='outputoutput.h5')
 
 	args = parser.parse_args()
 

@@ -120,6 +120,31 @@ def train_model(dataset, model_output, model_type, training_ratio=0.7, validatio
     return model
 
 
+def test_model(dataset, model, training_ratio=0.7, validation_ratio=0.1, batch_size=50):
+    if dataset is None:
+        raise ValueError('No dataset specified')
+
+    hdf5_file = h5py.File(dataset, 'r')
+
+    train, validation, test, validation_data = data_split(hdf5_file=hdf5_file, training_ratio=training_ratio, validation_ratio=validation_ratio)
+    train_start, train_end = train
+    validation_start, validation_end = validation
+    test_start, test_end = test
+
+    evaluation = model.evaluate_generator(generate_examples(hdf5_file=hdf5_file,
+                                                      batch_size=batch_size,
+                                                      start=test_start,
+                                                      end=test_end),
+                                    val_samples=test_end - test_start)
+
+
+    print(evaluation)
+    print(model.metrics_names)
+
+    return model
+
+
 if __name__ == "__main__":
-    model = train_model(dataset='output_lowprecision.h5', model_output='alexnet_model_output.h5', model_type='alexnet', epoch=150, batch_size=32)
-    # model = train_model(dataset='output.h5', model_output='model_output.h5', model_type='SimpleNet', epoch=120, batch_size=256)
+    # model = train_model(dataset='dataset_with_flips.h5', model_output='nvidia_model.h5', model_type='nvidia', epoch=75, batch_size=32)
+    model = load_model('tmp.h5')
+    model = test_model(dataset='dataset_with_flips.h5', model=model, batch_size=50)
