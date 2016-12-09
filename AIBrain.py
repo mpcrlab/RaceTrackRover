@@ -33,7 +33,7 @@ class AIBrain(Rover):
         Rover.__init__(self)
 
         self.model = NvidiaNet()
-        self.model.load_weights(os.getcwd() + '/model_tmp.h5')
+        self.model.load_weights(os.getcwd() + '/tmp.h5')
         
         self.displayUI = Pygame_UI()
         self.clock = pygame.time.Clock()
@@ -44,6 +44,7 @@ class AIBrain(Rover):
         self.controllerType = None
         # angle ranges from 0 to 180 where 180 = hard left, 90 = forward and 0 = hard right
         self.angle = None
+        self.predictedAngle = None
         self.treads = [0,0]
         i=0
         while self.image == None:
@@ -112,7 +113,8 @@ class AIBrain(Rover):
     def getAngle(self):
         angle = self.model.predict([self.image.reshape(-1, 240, 320, 3)])
         angle = (90 * angle) + 90  # converts tanh (-1,1) to 0-180 range??
-        return angle[0]
+        self.predictedAngle = angle[0][0]
+        return self.predictedAngle
 
     def run(self):
         print(self.get_battery_percentage())
@@ -138,11 +140,25 @@ class AIBrain(Rover):
                 oldTreads = newTreads
                 self.set_wheel_treads(newTreads[0],newTreads[1])
             cv2.imshow("RoverCam", self.image)
+            predictAngleImg = self.displayWithAngle(self.predictedAngle, self.image)
+            cv2.imshow("Predicted Angle", predictAngleImg)
             self.clock.tick(self.FPS)
             pygame.display.flip()
             self.displayUI.screen.fill((255,255,255))
         self.endSession()
 
+    def displayWithAngle(self, angle, frame):
+        imgAngle = frame.copy()
+        if self.angle and not self.isReversed:
+            radius = 80
+            angle = angle * math.pi / 180
+            y = 240 - int(math.sin(angle) * radius)
+            x = int(math.cos(angle) * radius) + 160
+            # cv2.circle(frame, (160, 240), radius, (250, 250, 250), -1)
+            cv2.line(imgAngle, (160, 240), (x, y), (0, 0, 0), 5)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(imgAngle, str(int(angle * 180 / math.pi)), (x, y), font, .8, (255, 0, 255), 2)
+        return imgAngle
 
 
 
