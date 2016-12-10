@@ -96,7 +96,7 @@ class AIBrain(Rover):
         self.displayUI.display_message("Rover Battery Percentage: " + str(self.get_battery_percentage()), black, 0,0)
         self.displayUI.display_message("Controller Type: " + self.controllerType, black, 0, self.displayUI.fontSize * 1)
         # self.displayUI.display_message("Lights: " + lightsBool, black, 0, self.displayUI.fontSize*2)
-        self.displayUI.display_message("Steering Angle: " + str(self.angle), black, 0, self.displayUI.fontSize*3)
+        self.displayUI.display_message("Predicted Angle: " + str(self.predictedAngle), black, 0, self.displayUI.fontSize*3)
         self.displayUI.display_message("Treads: " + str(self.treads), black, 0, self.displayUI.fontSize*4)
         # self.displayUI.display_message("Motion: " + motionBool, black, 0, self.displayUI.fontSize*5)
         # self.displayUI.display_message("Reversed: " + str(self.isReversed), black, 0, self.displayUI.fontSize*6)
@@ -105,8 +105,8 @@ class AIBrain(Rover):
         # self.displayUI.display_message("To record data, must not be paused and not be reversed: " + learning, black, 0, self.displayUI.fontSize * 9)
 
     def getAngle(self):
-        angle = self.model.predict([self.image.reshape(-1, 240, 320, 3)])
-        angle = (90 * angle) + 90  # converts tanh (-1,1) to 0-180 range??
+        angle = self.model.predict(self.image.reshape(-1, 240, 320, 3))
+        angle = (90 * angle) + 90
         self.predictedAngle = angle[0][0]
         return self.predictedAngle
 

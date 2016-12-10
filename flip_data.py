@@ -5,7 +5,7 @@ import numpy as np
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='Rover HDF5 Concatenator')
-	parser.add_argument('--dataset', type=str, default='training_data/output.h5')
+	parser.add_argument('--dataset', type=str, default='output.h5')
 	parser.add_argument('--output', type=str, default='output_flipped.h5')
 
 	args = parser.parse_args()
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 	output_file = h5py.File(output, 'a')
 	output_dataset_length = dataset_length * 2
 	output_xs = output_file.create_dataset('x_dataset', (output_dataset_length, 240, 320, 3), dtype='int8')
-	output_ys = output_file.create_dataset('y_dataset', (output_dataset_length, 1), dtype='int8')
+	output_ys = output_file.create_dataset('y_dataset', (output_dataset_length, 1), dtype='f8')
 
 
 	progress = progressbar.ProgressBar(maxval=output_dataset_length)
@@ -46,8 +46,6 @@ if __name__ == "__main__":
 	    progress.update(instance)
 
 	progress.finish()
-
-
 
 
 

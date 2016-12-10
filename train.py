@@ -145,6 +145,6 @@ def test_model(dataset, model, training_ratio=0.7, validation_ratio=0.1, batch_s
 
 
 if __name__ == "__main__":
-    # model = train_model(dataset='dataset_with_flips.h5', model_output='nvidia_model.h5', model_type='nvidia', epoch=75, batch_size=32)
-    model = load_model('tmp.h5')
-    model = test_model(dataset='dataset_with_flips.h5', model=model, batch_size=50)
+    model = train_model(dataset='dataset.h5', model_output='nvidia_model.h5', model_type='nvidia', epoch=75, batch_size=32)
+    # model = load_model('tmp.h5')
+    # model = test_model(dataset='output_flipped.h5', model=model, batch_size=50)
