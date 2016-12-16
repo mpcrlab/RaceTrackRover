@@ -1,28 +1,42 @@
+import argparse
 import h5py
 import numpy as np
 import progressbar
 import math
 import cv2
 
-def displayData(frame, angle):
+def displayData(image, angle):
 	radius = 80
 	angle = (angle * 90) + 90
 	angle = angle * math.pi / 180
 	y = 240 - int(math.sin(angle) * radius)
 	x = int(math.cos(angle) * radius) + 160
-	#cv2.circle(frame, (160, 240), radius, (250, 250, 250), -1)
-	cv2.line(frame, (160, 240), (x, y), (0, 0, 0), 5)
+	cv2.line(image, (160, 240), (x, y), (0, 0, 0), 5)
 	font = cv2.FONT_HERSHEY_SIMPLEX
-	cv2.putText(frame, str(int(angle * 180 / math.pi)), (x, y), font, .8, (255, 0, 255), 2)
-	return frame
+	cv2.putText(image, str(int(angle * 180 / math.pi)), (x, y), font, .8, (255, 0, 255), 2)
+	return image
 
 
 if __name__ == "__main__":
-	dataset = "dataset.h5"
-	hdf5_file = h5py.File(dataset, 'r')
-	xs = hdf5_file['x_dataset']
-	ys = hdf5_file['y_dataset']
-	dataset_length = len(xs)
+	parser = argparse.ArgumentParser(description='Visualizes frames and angles for a given h5 dataset')
+	parser.add_argument('--file', type=str, default='dataset.h5')
+	parser.add_argument('--run', type=str)
+
+	args = parser.parse_args()
+	file = args.file
+	run = args.run
+
+	f = h5py.File(file, 'r')
+
+	keys = [x.encode('UTF8') for x in f.keys()]
+
+	if not run:
+		run = keys[0]
+	print run
+
+	dataset = f[run]
+
+	dataset_length = dataset.shape[0]
 
 	progress = progressbar.ProgressBar(maxval=dataset_length)
 	progress.start()
@@ -30,13 +44,13 @@ if __name__ == "__main__":
 	instance = 0
 
 	for i in range(dataset_length):
-	    frame = xs[i]
-	    angle = ys[i]
-	    visualize = displayData(frame, angle)
-	    cv2.imshow("Frame", visualize)
-	    cv2.waitKey(5)
-	    instance += 1
-	    progress.update(instance)
+		image = dataset[i]['image']
+		angle = dataset[i]['angle']
+		image = displayData(image, angle)
+		cv2.imshow("Image", image)
+		cv2.waitKey(20)
+		instance += 1
+		progress.update(instance)
 
 	cv2.destroyAllWindows()
 	progress.finish()

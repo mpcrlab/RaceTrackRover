@@ -121,7 +121,7 @@ class RoverExtended(Rover):
     def endSession(self):
         self.set_wheel_treads(0,0)
         if self.canSave:
-            self.d.save()
+            self.d.save('dataset.h5')
         pygame.quit()
         cv2.destroyAllWindows()
         sys.exit()
@@ -155,9 +155,9 @@ class RoverExtended(Rover):
     def eraseFrames(self, count):
         size = len(self.d.angles)
         if (size - count > 0):
-            print "--", "Deleting 1 second of frames!"
+            print "--", "Deleting" , count, "seconds of frames!"
             self.d.angles = self.d.angles[:size - count]
-            self.d.photos = self.d.photos[:size - count]
+            self.d.images = self.d.images[:size - count]
         else:
             print "Couldn't delete! List has less than", count, "frames!"
 
@@ -210,7 +210,7 @@ class RoverExtended(Rover):
             self.isLearning = self.canSave and not self.isReversed and not self.paused
             if self.isLearning:
                 self.d.angles.append(self.angle)
-                self.d.photos.append(self.image)
+                self.d.images.append(self.image)
             # self.process_video_from_rover()
             oldTime = time.time()
             timer = abs(newTime - oldTime)

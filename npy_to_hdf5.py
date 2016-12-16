@@ -2,39 +2,55 @@ import argparse
 import h5py
 import progressbar
 import numpy as np
+import datetime
+import os
 
-if __name__ == "__main__":
-	parser = argparse.ArgumentParser(description='Rover Numpy File to HDF5 Converter')
-	parser.add_argument('--location', type=str, default='training_data')
+def convert_and_save(parent_loc, run_loc):
+	np_x = np.load(parent_loc + "/" + run_loc + "/img.npy")
+	np_y = np.load(parent_loc + "/" + run_loc + "/ang.npy")
 
-	args = parser.parse_args()
-
-	location = args.location
-
-	np_x = np.load(location + "img.npy")
-	np_y = np.load(location + "ang.npy")
+	np_y = (np_y - 90) / 90
 
 	dataset_length = len(np_x)
+	output_dataset_length = dataset_length * 2
 
-	output_file = h5py.File(location + "output.h5")
+	f = h5py.File("dset_test.h5", 'a')
 
-	x_dest = output_file.create_dataset('x_dataset', (dataset_length, 240, 320, 3), dtype='int8')
-	y_dest = output_file.create_dataset('y_dataset', (dataset_length, 1), dtype='int8')
+	save_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+	dset_name = "Run-" + save_time
 
-	progress = progressbar.ProgressBar(maxval=dataset_length * 2)
+	print "Saving as", dset_name
 
-	instance = 0
+	dt = np.dtype([('image', np.uint8, (240, 320, 3)), ('angle', np.float16)])
+	output = f.create_dataset(dset_name, (output_dataset_length, ), dtype=dt)
+
+	progress = progressbar.ProgressBar(maxval=output_dataset_length)
 	progress.start()
 
-	for i in range(len(np_x)):
-		x = np_x[i]
-		x_dest[i] = x
+	instance = 0
+
+	for i in range(dataset_length):
+		output[instance] = (np_x[i], np_y[i])
 		instance += 1
 		progress.update(instance)
 
-	for j in range(len(np_y)):
-		y = np_y[j]
-		y_dest[j] = y
+	for j in range(dataset_length):
+		output[instance] = (np.fliplr(np_x[j]), np_y[j] * -1)
+		instance += 1
 		progress.update(instance)
 
 	progress.finish()
+
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description='Rover Numpy File to HDF5 Converter')
+	parser.add_argument('--parent_loc', type=str, default='training_data')
+
+	args = parser.parse_args()
+
+	parent_loc = args.parent_loc
+	files = os.listdir(os.getcwd() + "/" + parent_loc)
+	for file in files:
+		if file[:3] == "Run":
+			print "Converting", file
+			convert_and_save(parent_loc, file)
