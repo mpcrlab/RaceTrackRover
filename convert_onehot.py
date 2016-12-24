@@ -1,37 +1,60 @@
 import h5py
 import numpy as np
+import argparse
+import progressbar
 
-f = h5py.File('output_onehot.h5','a')
-
-images = f['x_dataset']
-angles = f['y_dataset']
-
-index_to_delete = []
-onehot_list = []
-
-for index in range(len(angles)):
-	angle = angles[index][0]
-	if angle <= 180 and angle >= 130:
-	    index_to_delete.append(index)
-	elif angle < 130 and angle >= 100:
+def get_onehot(angle):
+	angle = (angle * 90) + 90
+	if angle >= 100:
 	    onehot = [0, 0, 1]
-	    onehot_list.append(onehot)
 	elif angle < 100 and angle >= 80:
 	    onehot = [0, 1, 0]
-	    onehot_list.append(onehot)
-	elif angle < 80 and angle >= 50:
+	elif angle < 80:
 	    onehot = [1, 0, 0]
-	    onehot_list.append(onehot)
-	elif angle < 50 and angle >= 0:
-	    index_to_delete.append(index)
+	return np.array(onehot)
 
-onehot_list = np.asarray(onehot_list)
+def convert_to_onehot(dset_fname, onehot_fname, key_name):
+	f = h5py.File(dset_fname, 'r')
+	f_onehot = h5py.File(onehot_fname, 'a')
+	
+	dset = f[key_name]
+	dataset_length = dset.shape[0]
 
-f.__delitem__('y_dataset')
-f.create_dataset('y_dataset', data=onehot_list)
+	print "Saving as", key_name, "to", onehot_fname
 
-for index in range(len(images)):
-	reverse_index = len(images) - 1
-	image = images[reverse_index]
-	if index in index_to_delete:
-		images.remove(image) #wont work cause its h5 object
+	dt = np.dtype([('image', np.uint8, (240, 320, 3)), ('angle', np.int8, (3,))])
+	output_onehot = f_onehot.create_dataset(key_name, (dataset_length, ), dtype=dt)
+
+	progress = progressbar.ProgressBar(maxval=dataset_length)
+	progress.start()
+
+	instance = 0
+
+	for i in range(dataset_length):
+		image = dset[i]['image']
+		angle = dset[i]['angle']
+		angle_onehot = get_onehot(angle)
+		output_onehot[instance] = (image, angle_onehot)
+		instance += 1
+		progress.update(instance)
+
+	progress.finish()
+	f.close()
+	f_onehot.close()
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description='Convert angles to a 3-state onehot vector')
+	parser.add_argument('--original_file', type=str, default='dataset.h5')
+
+	args = parser.parse_args()
+	original_file = args.original_file
+
+	f = h5py.File(original_file, 'r')
+
+	keys = [x.encode('UTF8') for x in f.keys()]
+	
+	f.close()
+
+	print("Total keys:", len(keys))
+	for key in keys:
+		convert_to_onehot(original_file, 'onehot_dataset.h5', key)
