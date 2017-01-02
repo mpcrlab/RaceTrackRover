@@ -14,7 +14,7 @@ class RoverExtended(Rover):
     def __init__(self):
         Rover.__init__(self)
         self.d = Data()
-        self.displayUI = Pygame_UI()
+        self.userInterface = Pygame_UI()
         self.clock = pygame.time.Clock()
         self.FPS = 30
         self.image = None
@@ -46,13 +46,34 @@ class RoverExtended(Rover):
             self.treads = [1,-1]
 
     def setControls(self):
-        controls = raw_input('Enter K to control from Keyboard, or W to control from Wheel (K/W): ').upper()
-        self.canSave = raw_input('Do you want this data to be recorded? (Y/N)').upper()
+        black = (0,0,0)
+        controls = None
+        while not controls:
+            self.userInterface.display_message("Enter K to control from Keyboard, or W to control from Wheel (K/W): ", black, 0,0)
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if chr(event.key) in ['K','k','W','w']:
+                        controls = chr(event.key).upper()
+            self.clock.tick(self.FPS)
+            pygame.display.flip()
+            self.userInterface.screen.fill((255,255,255))
+             
+        while not self.canSave:
+            self.userInterface.display_message("Do you want this data to be recorded? (Y/N):", black, 0,0)
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if chr(event.key) in ['Y','y','N','n']:
+                        self.canSave = chr(event.key).upper()
+            self.clock.tick(self.FPS)
+            pygame.display.flip()
+            self.userInterface.screen.fill((255,255,255))           
+
         if self.canSave == 'Y':
             self.canSave = True
             self.isLearning = True
         else:
             self.canSave = False
+
         if controls == "K":
             self.controllerType = "Keyboard"
             self.paused = True
@@ -171,16 +192,16 @@ class RoverExtended(Rover):
         motionBool = "Stopped" if self.paused else "Moving"
         learning = "Learning" if self.isLearning else "Not Learning"
 
-        self.displayUI.display_message("Rover Battery Percentage: " + str(self.get_battery_percentage()), black, 0,0)
-        self.displayUI.display_message("Controller Type: " + self.controllerType, black, 0, self.displayUI.fontSize * 1)
-        self.displayUI.display_message("Lights: " + lightsBool, black, 0, self.displayUI.fontSize*2)
-        self.displayUI.display_message("Steering Angle: " + str(self.angle), black, 0, self.displayUI.fontSize*3)
-        self.displayUI.display_message("Treads: " + str(self.treads), black, 0, self.displayUI.fontSize*4)
-        self.displayUI.display_message("Motion: " + motionBool, black, 0, self.displayUI.fontSize*5)
-        self.displayUI.display_message("Reversed: " + str(self.isReversed), black, 0, self.displayUI.fontSize*6)
-        self.displayUI.display_message("Number of Frames Collected: " + str(len(self.d.angles)), black, 0, self.displayUI.fontSize*7)
-        self.displayUI.display_message("Can Collect Data (initialized at start): " + str(self.canSave), black, 0, self.displayUI.fontSize*8)
-        self.displayUI.display_message("To record data, must not be paused and not be reversed: " + learning, black, 0, self.displayUI.fontSize * 9)
+        self.userInterface.display_message("Rover Battery Percentage: " + str(self.get_battery_percentage()), black, 0,0)
+        self.userInterface.display_message("Controller Type: " + self.controllerType, black, 0, self.userInterface.fontSize * 1)
+        self.userInterface.display_message("Lights: " + lightsBool, black, 0, self.userInterface.fontSize*2)
+        self.userInterface.display_message("Steering Angle: " + str(self.angle), black, 0, self.userInterface.fontSize*3)
+        self.userInterface.display_message("Treads: " + str(self.treads), black, 0, self.userInterface.fontSize*4)
+        self.userInterface.display_message("Motion: " + motionBool, black, 0, self.userInterface.fontSize*5)
+        self.userInterface.display_message("Reversed: " + str(self.isReversed), black, 0, self.userInterface.fontSize*6)
+        self.userInterface.display_message("Number of Frames Collected: " + str(len(self.d.angles)), black, 0, self.userInterface.fontSize*7)
+        self.userInterface.display_message("Can Collect Data (initialized at start): " + str(self.canSave), black, 0, self.userInterface.fontSize*8)
+        self.userInterface.display_message("To record data, must not be paused and not be reversed: " + learning, black, 0, self.userInterface.fontSize * 9)
 
     def run(self):
         print(self.get_battery_percentage())
@@ -229,7 +250,7 @@ class RoverExtended(Rover):
 
             self.clock.tick(self.FPS)
             pygame.display.flip()
-            self.displayUI.screen.fill((255,255,255))
+            self.userInterface.screen.fill((255,255,255))
         self.endSession()
 
     def edges(self,image):

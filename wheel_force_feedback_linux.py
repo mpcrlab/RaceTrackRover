@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import subprocess
 
 '''	
 	This script fixes a problem with the MOMO Racing Wheel 
