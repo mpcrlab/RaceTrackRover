@@ -78,7 +78,7 @@ class RoverExtended(Rover):
     def useButtons(self):
         buttons = self.controller.getButtonStates()
         if len(buttons) == 0:
-            print "\n\n Plug in the wheel!"
+            print("\n\n Plug in the wheel!")
             sys.exit()
 
         # only runs once per press, instead of constant hold down
@@ -91,7 +91,7 @@ class RoverExtended(Rover):
                 self.lightsOn = not self.lightsOn
             # right handel under wheel
             elif buttons[1] == 1:
-                print "Battery percentage:", self.get_battery_percentage()
+                print("Battery percentage:", self.get_battery_percentage())
             # top left button
             elif buttons[2] == 1:
                 self.paused = not self.paused
@@ -106,11 +106,11 @@ class RoverExtended(Rover):
                 self.eraseFrames(self.FPS * 10)
             # bottom left button
             elif buttons[6] == 1:
-                print len(self.d.angles), "frames saved"
+                pass
             # bottom right button
             elif buttons[7] == 1:
                 self.quit = True
-                print "Program stopping..."
+                print("Program stopping...")
             # gear shift pushed towards you
             elif buttons[8] == 1:
                 self.isReversed = not self.isReversed
@@ -144,7 +144,7 @@ class RoverExtended(Rover):
         elif key == 's':
             self.isReversed = True
         elif key == 'b':
-            print self.get_battery_percentage()
+            print(self.get_battery_percentage())
         elif key == ' ':
             self.paused = not self.paused
         elif key == 'p':
@@ -155,11 +155,11 @@ class RoverExtended(Rover):
     def eraseFrames(self, count):
         size = len(self.d.angles)
         if (size - count > 0):
-            print "--", "Deleting" , count, "seconds of frames!"
+            print("--", "Deleting" , count, "seconds of frames!")
             self.d.angles = self.d.angles[:size - count]
             self.d.images = self.d.images[:size - count]
         else:
-            print "Couldn't delete! List has less than", count, "frames!"
+            print("Couldn't delete! List has less than", count, "frames!")
 
     def pauseLearning(self):
         self.isLearning = not self.isLearning
@@ -182,7 +182,7 @@ class RoverExtended(Rover):
         self.displayUI.display_message("To record data, must not be paused and not be reversed: " + learning, black, 0, self.displayUI.fontSize * 9)
 
     def run(self):
-        print self.get_battery_percentage()
+        print(self.get_battery_percentage())
         oldTreads = None
         self.setControls()
         newTime = time.time()
