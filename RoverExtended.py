@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pygame
 from Controller import *
 from Data import *

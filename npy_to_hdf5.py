@@ -13,13 +13,13 @@ def convert_and_save(parent_loc, run_loc):
 
 	dataset_length = len(np_x)
 	output_dataset_length = dataset_length * 2
-
-	f = h5py.File("dset_test.h5", 'a')
+	dset_fname = "dset_test.h5"
+	f = h5py.File(dset_fname, 'a')
 
 	save_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 	dset_name = "Run-" + save_time
 
-	print "Saving as", dset_name
+	print "Saving as", dset_name, "to", dset_fname
 
 	dt = np.dtype([('image', np.uint8, (240, 320, 3)), ('angle', np.float16)])
 	output = f.create_dataset(dset_name, (output_dataset_length, ), dtype=dt)
