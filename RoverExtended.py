@@ -7,7 +7,6 @@ from rover import Rover
 import cv2
 import numpy as np
 import time
-import sys
 import math
 
 class RoverExtended(Rover):
@@ -18,8 +17,7 @@ class RoverExtended(Rover):
         self.clock = pygame.time.Clock()
         self.FPS = 30
         self.image = None
-        self.firstImage = None
-        self.count = 1
+        self.buttonState = 1
         self.quit = False
         self.controller = None
         self.controllerType = None
@@ -31,6 +29,7 @@ class RoverExtended(Rover):
         # angle ranges from 0 to 180 where 180 = hard left, 90 = forward and 0 = hard right
         self.angle = None
         self.treads = [0,0]
+        self.timeStart = time.time()
         self.run()
 
     def getNewTreads(self):
@@ -101,13 +100,14 @@ class RoverExtended(Rover):
         buttons = self.controller.getButtonStates()
         if len(buttons) == 0:
             print("\n\n Plug in the wheel!")
-            sys.exit()
+            self.quit = True
+
 
         # only runs once per press, instead of constant hold down
         if not any(buttons):
-            self.count = 0
-        if any(buttons) and self.count == 0:
-            self.count = 1
+            self.buttonState = 0
+        if any(buttons) and self.buttonState == 0:
+            self.buttonState = 1
             # left handel under wheel
             if buttons[0] == 1:
                 self.lightsOn = not self.lightsOn
@@ -146,7 +146,7 @@ class RoverExtended(Rover):
             self.d.save('dataset.h5')
         pygame.quit()
         cv2.destroyAllWindows()
-        sys.exit()
+        self.close()
 
     def process_video_from_rover(self, jpegbytes, timestamp_10msec):
         window_name = 'Machine Perception and Cognitive Robotics'
@@ -158,7 +158,7 @@ class RoverExtended(Rover):
     def useKey(self, key):
         self.isReversed = False
         key = chr(key)
-        if key == 'w' or key == 'a' or key == 'd':
+        if key in ['w','a','d']:
             self.angle = self.controller.getAngle(key)
             self.paused = False
         elif key == 'z':
@@ -186,7 +186,7 @@ class RoverExtended(Rover):
     def pauseLearning(self):
         self.isLearning = not self.isLearning
 
-    def displayAllMessages(self):
+    def displayDashboard(self):
         black = (0,0,0)
         lightsBool = "On" if self.lightsOn else "Off"
         motionBool = "Stopped" if self.paused else "Moving"
@@ -203,13 +203,32 @@ class RoverExtended(Rover):
         self.userInterface.display_message("Can Collect Data (initialized at start): " + str(self.canSave), black, 0, self.userInterface.fontSize*8)
         self.userInterface.display_message("To record data, must not be paused and not be reversed: " + learning, black, 0, self.userInterface.fontSize * 9)
 
+    def checkTreadStatus(self, oldTreads):
+        timeCurrent = time.time()
+        timer = abs(self.timeStart - timeCurrent)
+        newTreads = self.treads
+
+        # Resetting tread state
+        if oldTreads != newTreads:
+            self.freeze()
+
+        # Refreshing tread state
+        if oldTreads != newTreads or timer > 1:
+            self.timeStart = timeCurrent
+            oldTreads = newTreads
+            self.set_wheel_treads(newTreads[0],newTreads[1])
+        return oldTreads
+
     def run(self):
+        while type(self.image) == type(None):
+            pass
         print(self.get_battery_percentage())
         oldTreads = None
         self.setControls()
-        newTime = time.time()
         while not self.quit:
-            self.displayAllMessages()
+            self.displayDashboard()
+
+            # Using approperiate controller type
             if self.controllerType == "Wheel":
                 self.angle = self.controller.getAngle()
                 self.useButtons()
@@ -217,34 +236,37 @@ class RoverExtended(Rover):
                 key = self.controller.getActiveKey()
                 if key:
                     self.useKey(key)
+
+            # Getting new treads based on angle
             self.getNewTreads()
+
+            # Ignore this, needed for fast tread switching
+            # and to not back up the tread switching queue
+            oldTreads = self.checkTreadStatus(oldTreads)
+
+            # Boolean user-inputted controls
             if self.isReversed:
-                tr = list(self.treads)
-                tr = [tr[1] * -1, tr[0] * -1]
-                self.treads = tr
+                rev = self.treads[::-1]
+                self.treads = [rev[0] * -1, rev[1] * -1]
             if self.paused:
                 self.freeze()
             if self.lightsOn:
                 self.turn_the_lights_on()
             else:
                 self.turn_the_lights_off()
-            newTreads = self.treads
+
+            # Saving data, currently not saving when rover is in reversed state
             self.isLearning = self.canSave and not self.isReversed and not self.paused
             if self.isLearning:
                 self.d.angles.append(self.angle)
                 self.d.images.append(self.image)
-            # self.process_video_from_rover()
-            oldTime = time.time()
-            timer = abs(newTime - oldTime)
-            if oldTreads != newTreads:
-                self.freeze()
-            if oldTreads != newTreads or timer > 1:
-                newTime = time.time()
-                oldTreads = newTreads
-                self.set_wheel_treads(newTreads[0],newTreads[1])
+           
+            # Displaying images 
             cv2.imshow("RoverCam", self.image)
+            
             self.imgAngle = self.displayWithAngle(self.angle, self.image)
             cv2.imshow("Display Angle", self.imgAngle)
+            
             self.imgEdges = self.edges(self.image)
             cv2.imshow("RoverCamEdges", self.imgEdges)
 
@@ -257,7 +279,6 @@ class RoverExtended(Rover):
        imgEdges = cv2.Canny(image,50,200)
        return imgEdges
 
-
     def displayWithAngle(self, angle, frame):
         imgAngle = frame.copy()
         if self.angle and not self.isReversed:
@@ -265,7 +286,6 @@ class RoverExtended(Rover):
             angle = angle * math.pi / 180
             y = 240 - int(math.sin(angle) * radius)
             x = int(math.cos(angle) * radius) + 160
-            # cv2.circle(frame, (160, 240), radius, (250, 250, 250), -1)
             cv2.line(imgAngle, (160, 240), (x, y), (0, 0, 0), 5)
             font = cv2.FONT_HERSHEY_SIMPLEX
             cv2.putText(imgAngle, str(int(angle * 180 / math.pi)), (x, y), font, .8, (255, 0, 255), 2)
