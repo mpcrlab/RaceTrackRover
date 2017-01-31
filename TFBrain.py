@@ -6,8 +6,6 @@ from tflearn.layers.conv import conv_2d, max_pool_2d
 from tflearn.layers.normalization import local_response_normalization
 from tflearn.layers.estimator import regression
 
-from tflearn.helps.evaluator import Evaluator
-
 from utils.generator import generate_examples
 
 import h5py
@@ -23,12 +21,14 @@ import numpy as np
 import time
 import sys
 
-class AIBrain(Rover):
+class TFBrain(Rover):
     def __init__(self):
         Rover.__init__(self)
-
-		self.network = self.network_AlexNetSmall()
-		self.model = Evaluator(self.network, model='path') #FIXME: path just a placeholder
+	self.path = '/home/mpcr/RaceTrackRover/weights/rover_weights.tf1'
+	self.network = self.model_AlexNetSmall()
+	#self.model = Evaluator(self.network, model='model_alexnet_rover-7400') #FIXME: path just a placeholder
+	self.model = tflearn.DNN(self.network)
+	self.model.load(self.path)
         
         self.userInterface = Pygame_UI()
         self.clock = pygame.time.Clock()
@@ -46,26 +46,26 @@ class AIBrain(Rover):
 
     def model_AlexNetSmall(self):
     	network = input_data(shape=[None, 240, 320, 3])
-		network = conv_2d(network, 96, 11, strides=4, activation='relu')
-		network = max_pool_2d(network, 3, strides=2)
-		network = local_response_normalization(network)
-		network = conv_2d(network, 256, 5, activation='relu')
-		network = max_pool_2d(network, 3, strides=2)
-		network = local_response_normalization(network)
-		network = conv_2d(network, 384, 3, activation='relu')
-		network = conv_2d(network, 384, 3, activation='relu')
-		network = conv_2d(network, 256, 3, activation='relu')
-		network = max_pool_2d(network, 3, strides=2)
-		network = local_response_normalization(network)
-		network = fully_connected(network, 96, activation='tanh')
-		network = dropout(network, 0.5)
-		network = fully_connected(network, 96, activation='tanh')
-		network = dropout(network, 0.5)
-		network = fully_connected(network, 3, activation='softmax')
-		network = regression(network, optimizer='momentum',
-		                     loss='categorical_crossentropy',
-		                     learning_rate=0.001)
-		return network
+	network = conv_2d(network, 96, 11, strides=4, activation='relu')
+	network = max_pool_2d(network, 3, strides=2)
+	network = local_response_normalization(network)
+	network = conv_2d(network, 256, 5, activation='relu')
+	network = max_pool_2d(network, 3, strides=2)
+	network = local_response_normalization(network)
+	network = conv_2d(network, 384, 3, activation='relu')
+	network = conv_2d(network, 384, 3, activation='relu')
+	network = conv_2d(network, 256, 3, activation='relu')
+	network = max_pool_2d(network, 3, strides=2)
+	network = local_response_normalization(network)
+	network = fully_connected(network, 96, activation='tanh')
+	network = dropout(network, 0.5)
+	network = fully_connected(network, 96, activation='tanh')
+	network = dropout(network, 0.5)
+	network = fully_connected(network, 3, activation='softmax')
+	network = regression(network, optimizer='momentum',
+	                     loss='categorical_crossentropy',
+	                     learning_rate=0.001)
+	return network
 
     def getNewTreads(self):
         if self.angle <= 180 and self.angle >= 130:
@@ -115,9 +115,17 @@ class AIBrain(Rover):
         self.userInterface.display_message("Treads: " + str(self.treads), black, 0, self.userInterface.fontSize*4)
         
     def getAngle(self):
-        angle = self.model.predict(self.image)
-        angle = (90 * angle) + 90
-        self.predictedAngle = angle
+	img = np.array([self.image])
+        angle_probability = self.model.predict(img)[0]
+	print(angle_probability)
+	max_angle = max(angle_probability)
+
+	if angle_probability[0] == max_angle:
+	    self.predictedAngle = 60
+	elif angle_probability[1] == max_angle:
+            self.predictedAngle = 90
+        elif angle_probability[2] == max_angle:
+            self.predictedAngle = 120
         return self.predictedAngle
 
     def checkTreadStatus(self, oldTreads):
