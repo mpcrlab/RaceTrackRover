@@ -20,11 +20,12 @@ import cv2
 import numpy as np
 import time
 import sys
+import scipy.misc
 
 class TFBrain(Rover):
     def __init__(self):
         Rover.__init__(self)
-	self.path = '/home/mpcr/RaceTrackRover/weights/rover_weights.tf1'
+	self.path = '/home/mpcr/RaceTrackRover/weights/rover_weights2.tf1'
 	self.network = self.model_AlexNetSmall()
 	#self.model = Evaluator(self.network, model='model_alexnet_rover-7400') #FIXME: path just a placeholder
 	self.model = tflearn.DNN(self.network)
@@ -39,6 +40,7 @@ class TFBrain(Rover):
         self.controllerType = None
         # angle ranges from 0 to 180 where 180 = hard left, 90 = forward and 0 = hard right
         self.angle = None
+	self.probability = 0
         self.predictedAngle = None
         self.timeStart = time.time()
         self.treads = [0,0]
@@ -112,13 +114,27 @@ class TFBrain(Rover):
         self.userInterface.display_message("Rover Battery Percentage: " + str(self.get_battery_percentage()), black, 0,0)
         self.userInterface.display_message("Controller Type: " + self.controllerType, black, 0, self.userInterface.fontSize * 1)
         self.userInterface.display_message("Predicted Angle: " + str(self.predictedAngle), black, 0, self.userInterface.fontSize*3)
-        self.userInterface.display_message("Treads: " + str(self.treads), black, 0, self.userInterface.fontSize*4)
+        self.userInterface.display_message("Probability: %" + str(self.probability), black, 0, self.userInterface.fontSize*5)
+        self.userInterface.display_message("Treads: " + str(self.treads), black, 0, self.userInterface.fontSize*6)
         
+    def convert(self, image):
+	converted_img = self.image
+	converted_img = np.mean(converted_img,2)
+	converted_img = converted_img[100:228,0:330]
+	converted_img = scipy.misc.imresize(converted_img,[128,128])
+	converted_img = np.expand_dims(converted_img,3)
+	return converted_img
+
     def getAngle(self):
-	img = np.array([self.image])
+
+
+	input_image = self.image
+	img = np.array([input_image])
         angle_probability = self.model.predict(img)[0]
 	print(angle_probability)
 	max_angle = max(angle_probability)
+	self.probability = max_angle * 100
+	self.probability = round(self.probability, 2)
 
 	if angle_probability[0] == max_angle:
 	    self.predictedAngle = 60

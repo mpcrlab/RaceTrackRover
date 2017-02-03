@@ -55,28 +55,17 @@ network = regression(network, optimizer='momentum',
 model = tflearn.DNN(network, checkpoint_path='rover_weights_path',
                     max_checkpoints=1, tensorboard_verbose=2)
 
-model.fit(X, Y, n_epoch=200, validation_set=0.1, shuffle=True,
-          show_metric=True, batch_size=64, snapshot_step=200,
-          snapshot_epoch=False, run_id='rover_weights_id')
-
-
 path = '/home/mpcr/RaceTrackRover/weights/rover_weights2.tf1'
-
-f = h5py.File('onehot_dataset.h5','r')
-dx = f['x_dataset']
-dy = f['y_dataset']
-
-img = np.array([dx[0]])
-print(model.predict(img))
-print("Actual:", dy[0])
-
-
-print("it got this far")
-model.save(path) #safeguard
-print("no, it got this far")
 
 model.load(path)
 
-print(model.predict(img))
-print("Actual:", dy[0])
+model.fit(X, Y, n_epoch=40, validation_set=0.1, shuffle=True,
+          show_metric=True, batch_size=64, snapshot_step=1000,
+          snapshot_epoch=False, run_id='rover_weights_id')
+
+path = '/home/mpcr/RaceTrackRover/weights/rover_weights3.tf1'
+
+model.save(path) #safeguard
+print("model saved")
+
 

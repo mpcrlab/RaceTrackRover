@@ -240,10 +240,14 @@ class RoverExtended(Rover):
             # Getting new treads based on angle
             self.getNewTreads()
 
+            # Ignore this, needed for fast tread switching
+            # and to not back up the tread switching queue
+            oldTreads = self.checkTreadStatus(oldTreads)
+
             # Boolean user-inputted controls
             if self.isReversed:
                 rev = self.treads[::-1]
-                self.treads = [rev[0]* -1, rev[1] * -1]
+                self.treads = [rev[0] * -1, rev[1] * -1]
             if self.paused:
                 self.freeze()
             if self.lightsOn:
@@ -251,11 +255,9 @@ class RoverExtended(Rover):
             else:
                 self.turn_the_lights_off()
 
-
             # Ignore this, needed for fast tread switching
             # and to not back up the tread switching queue
             oldTreads = self.checkTreadStatus(oldTreads)
-
 
             # Saving data, currently not saving when rover is in reversed state
             self.isLearning = self.canSave and not self.isReversed and not self.paused
