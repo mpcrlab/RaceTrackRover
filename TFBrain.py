@@ -25,12 +25,13 @@ import scipy.misc
 class TFBrain(Rover):
     def __init__(self):
         Rover.__init__(self)
-	self.path = '/home/mpcr/RaceTrackRover/weights/rover_weights2.tf1'
+	self.path = os.getcwd() + '/weights/rover_weights3.tf1'
 	self.network = self.model_AlexNetSmall()
 	#self.model = Evaluator(self.network, model='model_alexnet_rover-7400') #FIXME: path just a placeholder
 	self.model = tflearn.DNN(self.network)
 	self.model.load(self.path)
-        
+	
+	self.converted = None
         self.userInterface = Pygame_UI()
         self.clock = pygame.time.Clock()
         self.FPS = 30
@@ -116,19 +117,20 @@ class TFBrain(Rover):
         self.userInterface.display_message("Predicted Angle: " + str(self.predictedAngle), black, 0, self.userInterface.fontSize*3)
         self.userInterface.display_message("Probability: %" + str(self.probability), black, 0, self.userInterface.fontSize*5)
         self.userInterface.display_message("Treads: " + str(self.treads), black, 0, self.userInterface.fontSize*6)
-        
+
     def convert(self, image):
-	converted_img = self.image
+	converted_img = image
 	converted_img = np.mean(converted_img,2)
 	converted_img = converted_img[100:228,0:330]
 	converted_img = scipy.misc.imresize(converted_img,[128,128])
 	converted_img = np.expand_dims(converted_img,3)
+	self.converted = converted_img
 	return converted_img
 
     def getAngle(self):
 
 
-	input_image = self.image
+	input_image = self.image #self.convert(self.image)
 	img = np.array([input_image])
         angle_probability = self.model.predict(img)[0]
 	print(angle_probability)
@@ -187,10 +189,11 @@ class TFBrain(Rover):
 
             # Displaying images 
             cv2.imshow("RoverCam", self.image)
-            
+
             predictAngleImg = self.displayWithAngle(self.predictedAngle, self.image)
             cv2.imshow("Predicted Angle", predictAngleImg)
-            
+
+	    #cv2.imshow("Converted image", self.converted)
             self.clock.tick(self.FPS)
             pygame.display.flip()
             self.userInterface.screen.fill((255,255,255))
