@@ -20,8 +20,15 @@ import cv2
 import numpy as np
 import time
 import sys
+import scipy.misc
 
-
+def convert(image):
+    converted_img = image
+    converted_img = np.mean(converted_img,2)
+    converted_img = converted_img[100:228,0:330]
+    converted_img = scipy.misc.imresize(converted_img,[128,128])
+    converted_img = np.expand_dims(converted_img,3)
+    return converted_img
 
 if __name__ == '__main__':
 	f = h5py.File('onehot_dataset.h5','r')
@@ -31,7 +38,7 @@ if __name__ == '__main__':
 	actual_img = dx[0]
 	actual_ang = dy[0]
 
-	network = input_data(shape=[None, 240, 320, 3])
+	network = input_data(shape=[None, 128, 128, 1])
 	network = conv_2d(network, 96, 11, strides=4, activation='relu')
 	network = max_pool_2d(network, 3, strides=2)
 	network = local_response_normalization(network)
@@ -43,9 +50,9 @@ if __name__ == '__main__':
 	network = conv_2d(network, 256, 3, activation='relu')
 	network = max_pool_2d(network, 3, strides=2)
 	network = local_response_normalization(network)
-	network = fully_connected(network, 96, activation='tanh')
+	network = fully_connected(network, 4096, activation='tanh')
 	network = dropout(network, 0.5)
-	network = fully_connected(network, 96, activation='tanh')
+	network = fully_connected(network, 4096, activation='tanh')
 	network = dropout(network, 0.5)
 	network = fully_connected(network, 3, activation='softmax')
 	network = regression(network, optimizer='momentum',
@@ -54,10 +61,12 @@ if __name__ == '__main__':
 
 	#self.model = Evaluator(self.network, model='model_alexnet_rover-7400') #FIXME: path just a placeholder
 	model = tflearn.DNN(network)
-	model.load('rovernet1_v2.tflearn')
+	model.load(os.getcwd() + '/weights/ALexVINN_model_Feb4.tfl')
 
-	print("The model thinks this angle is correct:", model.predict(actual_img))
-	print("The actual angle is:", actual_ang)
+	converted = convert(actual_img)
+	cvt = np.array([converted])
+	print(model.predict(cvt))
+	print("Correct answer:", actual_ang)
 
 
 
