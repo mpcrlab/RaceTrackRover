@@ -240,10 +240,6 @@ class RoverExtended(Rover):
             # Getting new treads based on angle
             self.getNewTreads()
 
-            # Ignore this, needed for fast tread switching
-            # and to not back up the tread switching queue
-            oldTreads = self.checkTreadStatus(oldTreads)
-
             # Boolean user-inputted controls
             if self.isReversed:
                 rev = self.treads[::-1]
